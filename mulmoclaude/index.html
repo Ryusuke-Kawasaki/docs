@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIに「自分専用の台帳」を作らせる — やさしい解説</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fbf8f2;
+    --paper-2:#f3eee2;
+    --panel:#ffffff;
+    --ink:#2b2823;
+    --ink-soft:#5c574e;
+    --ink-faint:#978f80;
+    --rule:#e7e0d1;
+    --rule-soft:#efe9dc;
+    --green:#2f7d5b;
+    --green-deep:#235e44;
+    --green-soft:#e3f0e8;
+    --amber:#cf9526;
+    --amber-deep:#a3741a;
+    --amber-soft:#fbeece;
+    --code-bg:#272320;
+    --code-fg:#e9e3d6;
+    --code-dim:#9a9182;
+    --maxw:920px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:"Noto Sans JP",system-ui,sans-serif;
+    line-height:2;font-size:17px;
+    font-feature-settings:"palt" 1;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  }
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+  h1,h2,h3,h4{font-family:"Zen Maru Gothic",sans-serif;line-height:1.5;font-weight:700}
+  code,.mono{font-family:"JetBrains Mono",monospace}
+  p code,li code{
+    background:var(--paper-2);border:1px solid var(--rule-soft);border-radius:6px;
+    padding:.05em .42em;font-size:.84em;color:var(--green-deep);word-break:break-word;
+  }
+  strong{font-weight:700;color:var(--ink)}
+  .hl{background:linear-gradient(transparent 60%,var(--amber-soft) 60%);font-weight:700}
+  ::selection{background:var(--amber-soft)}
+  a{color:var(--green-deep)}
+
+  .eyebrow{
+    font-family:"JetBrains Mono",monospace;font-size:.72rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--ink-faint);font-weight:500;
+  }
+
+  /* ---------- hero ---------- */
+  .hero{padding:90px 0 54px;position:relative;overflow:hidden}
+  .hero::before{
+    content:"";position:absolute;top:-120px;right:-80px;width:420px;height:420px;
+    background:radial-gradient(circle,var(--green-soft),transparent 68%);opacity:.8;z-index:0;
+  }
+  .hero .wrap{position:relative;z-index:1}
+  .hero .kicker{
+    display:inline-block;background:var(--green-soft);color:var(--green-deep);
+    font-size:.78rem;font-weight:700;border-radius:999px;padding:.45em 1.1em;margin-bottom:22px;
+    border:1px solid #cfe5d9;
+  }
+  .hero h1{
+    font-size:clamp(2rem,5.4vw,3.4rem);font-weight:900;margin:0 0 .35em;letter-spacing:.01em;
+  }
+  .hero h1 .u{color:var(--green-deep)}
+  .hero .deck{font-size:clamp(1.05rem,2vw,1.28rem);color:var(--ink-soft);max-width:30em;font-weight:400}
+  .hero .pill-row{margin-top:30px;display:flex;flex-wrap:wrap;gap:10px}
+  .hero .pill{
+    font-family:"JetBrains Mono",monospace;font-size:.74rem;color:var(--ink-faint);
+    border:1px solid var(--rule);border-radius:8px;padding:.5em .85em;background:var(--panel);
+  }
+
+  /* ---------- section ---------- */
+  section{padding:30px 0}
+  .stitle{display:flex;align-items:baseline;gap:.7em;margin:34px 0 6px}
+  .stitle .no{
+    font-family:"JetBrains Mono",monospace;font-weight:700;font-size:.9rem;color:var(--green);
+    border:1.5px solid var(--green);border-radius:7px;padding:.1em .55em;flex:none;
+  }
+  .stitle h2{font-size:clamp(1.4rem,3vw,1.9rem);margin:0}
+  section > .wrap > p{margin:1em 0}
+
+  /* ---------- conclusion card ---------- */
+  .conc{
+    background:var(--panel);border:1px solid var(--rule);border-left:5px solid var(--green);
+    border-radius:14px;padding:26px 28px;margin:24px 0;box-shadow:0 1px 0 rgba(0,0,0,.02);
+  }
+  .conc .lbl{font-family:"Zen Maru Gothic";font-weight:700;color:var(--green-deep);font-size:.95rem;margin-bottom:6px}
+  .conc p{margin:.3em 0;font-size:1.06rem}
+
+  /* ---------- before/after cost ---------- */
+  .ba{display:flex;gap:16px;margin:24px 0;flex-wrap:wrap}
+  .ba .card{flex:1;min-width:240px;border-radius:14px;padding:22px 24px;border:1px solid var(--rule)}
+  .ba .old{background:var(--paper-2)}
+  .ba .new{background:var(--green-soft);border-color:#cfe5d9}
+  .ba .tag{font-family:"JetBrains Mono",monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;margin-bottom:8px}
+  .ba .old .tag{color:var(--ink-faint)}
+  .ba .new .tag{color:var(--green-deep)}
+  .ba h4{font-size:1.1rem;margin:.2em 0 .5em}
+  .ba p{margin:0;font-size:.92rem;color:var(--ink-soft);line-height:1.85}
+
+  /* ---------- walkthrough step ---------- */
+  .step{
+    display:grid;grid-template-columns:auto 1fr;gap:0 22px;margin:0;position:relative;
+  }
+  .step .rail{display:flex;flex-direction:column;align-items:center}
+  .step .bub{
+    width:46px;height:46px;border-radius:50%;flex:none;display:grid;place-items:center;
+    font-family:"JetBrains Mono",monospace;font-weight:700;font-size:1.05rem;
+    background:var(--green);color:#fff;z-index:1;
+  }
+  .step .line{width:2px;flex:1;background:var(--rule);margin:6px 0}
+  .step:last-child .line{display:none}
+  .step .body{padding-bottom:30px;min-width:0}
+  .step .youbar{
+    background:var(--amber-soft);border:1px solid #eed9a6;border-radius:10px;
+    padding:10px 16px;font-weight:700;color:var(--amber-deep);font-size:.96rem;margin:2px 0 14px;
+    display:inline-block;
+  }
+  .step .youbar::before{content:"あなた：";font-weight:700;opacity:.7;font-size:.85em}
+  .step h3{font-size:1.18rem;margin:.1em 0 .4em}
+  .step h3 .does{font-size:.78rem;font-family:"JetBrains Mono",monospace;color:var(--green);font-weight:700;margin-left:.5em}
+  .step .body > p{margin:.4em 0 0;font-size:.96rem;color:var(--ink-soft)}
+  .step .paper-tie{
+    margin-top:12px;font-size:.82rem;color:var(--green-deep);background:var(--green-soft);
+    border-radius:8px;padding:8px 13px;display:inline-block;
+  }
+  .step .paper-tie b{font-family:"JetBrains Mono",monospace;font-weight:700}
+
+  /* ---------- file accordion ---------- */
+  .file{border:1px solid var(--rule);border-radius:11px;margin:14px 0 0;overflow:hidden;background:var(--panel)}
+  .file > summary{
+    list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;
+    padding:13px 16px;font-family:"JetBrains Mono",monospace;font-size:.84rem;font-weight:500;
+    color:var(--ink);user-select:none;
+  }
+  .file > summary::-webkit-details-marker{display:none}
+  .file > summary .ic{font-size:1.05rem}
+  .file > summary .fn{flex:1;word-break:break-all}
+  .file > summary .chev{color:var(--ink-faint);transition:transform .25s;font-size:.8rem}
+  .file[open] > summary .chev{transform:rotate(90deg)}
+  .file > summary .peek{font-size:.7rem;color:var(--ink-faint);font-family:"Noto Sans JP";font-weight:400}
+  .file .code{
+    background:var(--code-bg);color:var(--code-fg);
+    font-family:"JetBrains Mono",monospace;font-size:.79rem;line-height:1.75;
+    padding:16px 18px;overflow-x:auto;border-top:1px solid #34302b;
+  }
+  .file .code pre{margin:0;white-space:pre}
+  .code .k{color:#8fcfb4}.code .s{color:#e7c07d}.code .d{color:var(--code-dim)}.code .n{color:#e09a6b}
+
+  /* ---------- folder state ---------- */
+  .folder{
+    background:var(--paper-2);border:1px dashed var(--rule);border-radius:12px;
+    padding:16px 18px;margin:14px 0 0;font-family:"JetBrains Mono",monospace;font-size:.82rem;line-height:1.95;
+  }
+  .folder .ttl{font-family:"Noto Sans JP";font-size:.72rem;font-weight:700;color:var(--ink-faint);letter-spacing:.08em;margin-bottom:6px}
+  .folder .row{color:var(--ink-soft)}
+  .folder .row .cm{color:var(--ink-faint)}
+  .folder .row.fresh{color:var(--green-deep);font-weight:700}
+  .folder .row.fresh .badge{
+    background:var(--green);color:#fff;font-size:.62rem;border-radius:5px;padding:.1em .5em;margin-left:.5em;
+    font-family:"Noto Sans JP";font-weight:700;letter-spacing:.05em;
+  }
+
+  /* ---------- two-concept split ---------- */
+  .two{display:flex;gap:16px;margin:22px 0;flex-wrap:wrap}
+  .two .c{flex:1;min-width:260px;border:1px solid var(--rule);border-radius:14px;padding:22px 24px;background:var(--panel)}
+  .two .c .ico{font-size:1.6rem}
+  .two .c h4{margin:.3em 0 .3em;font-size:1.12rem}
+  .two .c .en{font-family:"JetBrains Mono",monospace;font-size:.72rem;color:var(--ink-faint);font-weight:400}
+  .two .c p{margin:.5em 0 0;font-size:.92rem;color:var(--ink-soft);line-height:1.85}
+
+  /* big folder picture */
+  .bigfolder{
+    background:var(--code-bg);color:var(--code-fg);border-radius:14px;padding:24px 26px;margin:20px 0;
+    font-family:"JetBrains Mono",monospace;font-size:.85rem;line-height:2;overflow-x:auto;
+  }
+  .bigfolder .top{color:var(--amber);font-weight:700}
+  .bigfolder .cm{color:var(--code-dim)}
+  .bigfolder .g{color:#8fcfb4}
+
+  /* ---------- 3 ops summary ---------- */
+  .ops{display:grid;gap:12px;margin:22px 0}
+  .op{
+    display:flex;gap:16px;align-items:flex-start;background:var(--panel);
+    border:1px solid var(--rule);border-radius:12px;padding:18px 20px;
+  }
+  .op .cmd{
+    font-family:"JetBrains Mono",monospace;font-size:.82rem;font-weight:700;color:var(--green-deep);
+    background:var(--green-soft);border-radius:8px;padding:.55em .8em;flex:none;white-space:nowrap;
+  }
+  .op .tx{font-size:.95rem}
+  .op .tx b{display:block;margin-bottom:2px}
+  .op .tx span{color:var(--ink-soft);font-size:.9rem}
+
+  /* ---------- callout ---------- */
+  .note{
+    background:var(--amber-soft);border:1px solid #eed9a6;border-radius:12px;
+    padding:18px 22px;margin:22px 0;font-size:.98rem;
+  }
+  .note b{color:var(--amber-deep)}
+
+  /* ---------- footer ---------- */
+  footer{border-top:1px solid var(--rule);margin-top:40px;padding:46px 0 70px;background:var(--paper-2)}
+  footer h3{font-size:1.2rem;margin:0 0 .4em}
+  footer .src{margin-top:18px;display:grid;gap:8px}
+  footer .src a{
+    display:flex;justify-content:space-between;gap:10px;align-items:center;
+    font-family:"JetBrains Mono",monospace;font-size:.8rem;text-decoration:none;color:var(--ink);
+    border:1px solid var(--rule);border-radius:9px;padding:11px 15px;background:var(--panel);
+  }
+  footer .src a:hover{border-color:var(--green)}
+  footer .src a .jp{font-family:"Noto Sans JP";color:var(--ink-faint);font-weight:400}
+  footer .dis{margin-top:24px;font-size:.78rem;color:var(--ink-faint);line-height:1.8}
+
+  .reveal{opacity:0;transform:translateY(18px)}
+  .reveal.in{opacity:1;transform:none;transition:opacity .55s ease,transform .55s cubic-bezier(.2,.7,.2,1)}
+
+  @media(max-width:560px){
+    body{font-size:16px}
+    .step{grid-template-columns:36px 1fr;gap:0 14px}
+    .step .bub{width:36px;height:36px;font-size:.9rem}
+    .op{flex-direction:column;gap:8px}
+  }
+  @media(prefers-reduced-motion:reduce){
+    *{transition:none!important;scroll-behavior:auto!important}
+    .reveal{opacity:1;transform:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="wrap">
+    <span class="kicker">むずかしい論文4本 → レストランの例ひとつで</span>
+    <h1>AIに、<span class="u">自分専用の台帳</span>を<br>作らせるという話。</h1>
+    <p class="deck">
+      「ワークスペースがエージェントになる」「アプリがデータになる」——
+      抽象的でピンとこない4本の論考を、<strong>1軒のレストランを記録する</strong>という
+      具体例だけで、最初から最後まで通して説明します。
+    </p>
+    <div class="pill-row">
+      <span class="pill">専門用語ほぼゼロ</span>
+      <span class="pill">フォルダが育つのを追う</span>
+      <span class="pill">出典：receptron/mulmoclaude</span>
+    </div>
+  </div>
+</header>
+
+<!-- CONCLUSION FIRST -->
+<section>
+  <div class="wrap">
+    <div class="conc reveal">
+      <div class="lbl">先に結論だけ</div>
+      <p>
+        ソフトは「みんなに売る製品」から、<span class="hl">あなた専用に、その都度AIが育てるもの</span>へ変わる。
+        コードは使い捨てでいい。大事なのは「<strong>何をしたいか（意図）</strong>」と「<strong>あなたのデータ</strong>」だけ。
+      </p>
+      <p style="margin-top:.8em;color:var(--ink-soft);font-size:.95rem">
+        ——この一文の意味を、下のレストランの例で順番にほどいていきます。
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- WHY NOW -->
+<section>
+  <div class="wrap">
+    <div class="stitle reveal"><span class="no">なぜ</span><h2>「いま」これが可能になったのか</h2></div>
+    <p class="reveal">
+      昔は、ソフトを作るのは高くつきました。だから1個作って何百万人に使ってもらう＝
+      「平均的なみんな」に合わせるしかなかった。「<strong>自分のレストランを東京の路線図みたいに表示するアプリ</strong>」なんて、
+      欲しい人が世界に1人しかいないので、どの会社も絶対に作りません。
+    </p>
+    <div class="ba">
+      <div class="card old reveal">
+        <div class="tag">昔</div>
+        <h4>みんなのために作る</h4>
+        <p>作るのが高い → 大勢に薄く配って元を取る → 一人ひとりの「ちょうど欲しい形」は永遠に作られない。</p>
+      </div>
+      <div class="card new reveal">
+        <div class="tag">いま</div>
+        <h4>あなた一人のために作る</h4>
+        <p>AIが頼んだ瞬間にコードを書く → 一人のために作るのが、ほぼタダ。<strong>あなたはコードを一度も見ない。</strong></p>
+      </div>
+    </div>
+    <p class="reveal">
+      「一人のために作る」が「百万人のために作る」のと同じくらい安くなった瞬間、
+      <span class="hl">わざわざ平均に合わせる理由が消えます</span>。これが4本の論文に共通する出発点です。
+    </p>
+  </div>
+</section>
+
+<!-- WALKTHROUGH -->
+<section>
+  <div class="wrap">
+    <div class="stitle reveal"><span class="no">本編</span><h2>フォルダが育つのを、順番に追う</h2></div>
+    <p class="reveal" style="margin-bottom:26px">
+      最初、あなたのフォルダは<strong>空っぽ</strong>です。ここから、たった一言で何のファイルが生まれるかを見ていきます。
+    </p>
+
+    <!-- step 1 -->
+    <div class="step reveal">
+      <div class="rail"><div class="bub">1</div><div class="line"></div></div>
+      <div class="body">
+        <div class="youbar">行きたいレストランを管理して</div>
+        <h3>AIは「台帳の形」を1枚書く<span class="does">＝ アプリ完成</span></h3>
+        <p>
+          AIが大層なプログラムを書くわけではありません。「店名・エリア・期待度の欄がある台帳」と
+          <strong>欄を定義する小さなファイルを1枚書くだけ</strong>。これだけでアプリは完成です。
+          新品の手帳は、まだ何も書いてなくても「手帳」ですよね。それと同じ。
+        </p>
+        <details class="file" open>
+          <summary><span class="ic">📋</span><span class="fn">restaurants/schema.json</span><span class="peek">＝ 台帳の欄の定義</span><span class="chev">▶</span></summary>
+          <div class="code"><pre>{
+  <span class="k">"title"</span>: <span class="s">"行きたいレストラン"</span>,
+  <span class="k">"fields"</span>: {
+    <span class="k">"name"</span>:   { <span class="k">"type"</span>:<span class="s">"string"</span>, <span class="k">"label"</span>:<span class="s">"店名"</span> },
+    <span class="k">"area"</span>:   { <span class="k">"type"</span>:<span class="s">"string"</span>, <span class="k">"label"</span>:<span class="s">"エリア"</span> },
+    <span class="k">"rating"</span>: { <span class="k">"type"</span>:<span class="s">"number"</span>, <span class="k">"label"</span>:<span class="s">"期待度"</span> }
+  }
+}</pre></div>
+        </details>
+        <span class="paper-tie">この「欄を決めるだけでアプリ」が <b>collections-architecture.md</b></span>
+      </div>
+    </div>
+
+    <!-- step 2 -->
+    <div class="step reveal">
+      <div class="rail"><div class="bub">2</div><div class="line"></div></div>
+      <div class="body">
+        <h3>AIは「操作の手順書」も1枚書く<span class="does">＝ skill</span></h3>
+        <p>
+          AIが次からこの台帳をどう扱うかを書いた、ただのメモです。プログラムではなく<strong>指示文</strong>。
+          本物のレシピ用スキルも、中身は「友達みたいに振る舞って。ファイルパスの話はユーザーにしないで」といった
+          普通の文章でした。
+        </p>
+        <details class="file">
+          <summary><span class="ic">📝</span><span class="fn">restaurants/SKILL.md</span><span class="peek">＝ 操作手順のメモ</span><span class="chev">▶</span></summary>
+          <div class="code"><pre><span class="d">---</span>
+<span class="k">name</span>: restaurants
+<span class="k">description</span>: 「○○に行きたい」「リスト見せて」のとき使う
+<span class="d">---</span>
+<span class="d"># 行きたいレストラン</span>
+- 保存：&lt;id&gt;.json を書く
+- 一覧：presentCollection を restaurants で呼ぶ</pre></div>
+        </details>
+        <div class="folder">
+          <div class="ttl">いまのフォルダ</div>
+          <div class="row">📁 restaurants/</div>
+          <div class="row">&nbsp;&nbsp;├ schema.json&nbsp;&nbsp;<span class="cm"># 台帳の形（アプリ本体）</span></div>
+          <div class="row fresh">&nbsp;&nbsp;└ SKILL.md&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm" style="color:inherit;opacity:.7"># 操作手順</span><span class="badge">NEW</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- step 3 -->
+    <div class="step reveal">
+      <div class="rail"><div class="bub">3</div><div class="line"></div></div>
+      <div class="body">
+        <div class="youbar">恵比寿のフレンチ、リオンに行きたい</div>
+        <h3>台帳に1件だけ書き足す<span class="does">＝ 使う</span></h3>
+        <p>
+          ここが大事な点でした。<span class="hl">データは最初から要りません。</span>
+          空の台帳から始まって、あなたが使うたびにAIがファイルを1個ずつ足していく。だんだん溜まっていきます。
+        </p>
+        <details class="file">
+          <summary><span class="ic">🍽️</span><span class="fn">restaurants/lyon.json</span><span class="peek">＝ データ1件目</span><span class="chev">▶</span></summary>
+          <div class="code"><pre>{ <span class="k">"id"</span>:<span class="s">"lyon"</span>, <span class="k">"name"</span>:<span class="s">"リオン"</span>, <span class="k">"area"</span>:<span class="s">"恵比寿"</span>, <span class="k">"rating"</span>:<span class="n">5</span> }</pre></div>
+        </details>
+        <div class="folder">
+          <div class="ttl">いまのフォルダ</div>
+          <div class="row">📁 restaurants/</div>
+          <div class="row">&nbsp;&nbsp;├ schema.json</div>
+          <div class="row">&nbsp;&nbsp;├ SKILL.md</div>
+          <div class="row fresh">&nbsp;&nbsp;└ lyon.json<span class="badge">NEW</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- step 4 -->
+    <div class="step reveal">
+      <div class="rail"><div class="bub">4</div><div class="line"></div></div>
+      <div class="body">
+        <div class="youbar">行ったかどうかも記録できるようにして</div>
+        <h3>schema を1行書き換えるだけ<span class="does">＝ 育てる</span></h3>
+        <p>
+          普通のソフトなら、機能追加はエンジニアがコードを書いて → ビルドして → 再デプロイ、の大仕事。
+          でもここでは<strong>AIが台帳の定義に1行足すだけ</strong>。デプロイも再起動もありません。
+          台帳がその場で進化します。
+        </p>
+        <details class="file">
+          <summary><span class="ic">✏️</span><span class="fn">schema.json に1行追加</span><span class="peek">＝ デプロイの壁なし</span><span class="chev">▶</span></summary>
+          <div class="code"><pre><span class="d">"fields": { … 既存の欄 …,</span>
+  <span class="k">"visited"</span>: { <span class="k">"type"</span>:<span class="s">"boolean"</span>, <span class="k">"label"</span>:<span class="s">"行った？"</span> }  <span class="d">← これを足すだけ</span>
+<span class="d">}</span></pre></div>
+        </details>
+        <span class="paper-tie">「機能追加＝文章を1枚書き足す＝AIが自分をバージョンアップ」が <b>workspace-is-the-agent.md</b></span>
+      </div>
+    </div>
+
+    <!-- step 5 -->
+    <div class="step reveal">
+      <div class="rail"><div class="bub">5</div><div class="line"></div></div>
+      <div class="body">
+        <div class="youbar">一覧じゃなくて地図で見たい</div>
+        <h3>AIが見た目（HTML）を1枚生やす<span class="does">＝ あなたは中身を見ない</span></h3>
+        <p>
+          表形式じゃ物足りないとき、AIがHTMLを書いて台帳に足します。あなたはそのコードを一度も見ません。
+          気に入らなければ「色を変えて」と言えば<strong>捨てて作り直す</strong>。修理はしない。
+        </p>
+        <details class="file">
+          <summary><span class="ic">🗺️</span><span class="fn">restaurants/views/map.html</span><span class="peek">＝ 自分専用UI（中身は見ない）</span><span class="chev">▶</span></summary>
+          <div class="code"><pre><span class="d">&lt;!-- AIが書いた地図表示。あなたは開かない。</span>
+<span class="d">     不満なら「色変えて」で丸ごと作り直す（=使い捨て） --&gt;</span>
+&lt;<span class="n">div</span> <span class="k">id</span>=<span class="s">"map"</span>&gt;…&lt;/<span class="n">div</span>&gt;</pre></div>
+        </details>
+        <span class="paper-tie">「コードは使い捨て・あなたは見ない」が <b>software-for-one.md</b></span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- TWO CONCEPTS -->
+<section>
+  <div class="wrap">
+    <div class="stitle reveal"><span class="no">整理</span><h2>つまずきやすい2つの言葉</h2></div>
+    <p class="reveal">「台帳1個の話」と「台帳を全部しまった引き出しの話」を、混ぜないのがコツです。</p>
+    <div class="two">
+      <div class="c reveal">
+        <div class="ico">📋</div>
+        <h4>Collections ＝ 台帳1個</h4>
+        <span class="en">collections-architecture.md</span>
+        <p>レストラン台帳をどう作るか。欄を決めるだけでアプリになり、専用のプログラムは要らない、という<strong>1個の仕組み</strong>の話。</p>
+      </div>
+      <div class="c reveal">
+        <div class="ico">🗄️</div>
+        <h4>Workspace ＝ 引き出し全体</h4>
+        <span class="en">workspace-is-the-agent.md</span>
+        <p>たくさんの台帳に加えて、AIの性格設定やできること（スキル）まで全部入った<strong>フォルダ＝AI本体</strong>の話。</p>
+      </div>
+    </div>
+
+    <p class="reveal" style="margin-top:8px">
+      その「引き出し」には、台帳だけでなく次の2種類のファイルも入っています。どちらも<strong>ただの文章</strong>です。
+    </p>
+    <div class="ops reveal">
+      <div class="op">
+        <span class="cmd">roles</span>
+        <div class="tx"><b>性格設定</b><span>「丁寧な秘書として、結論から言う」のような、AIのキャラや口調を決めた文章。書き換えれば性格が変わる。</span></div>
+      </div>
+      <div class="op">
+        <span class="cmd">skills</span>
+        <div class="tx"><b>できること（手順書）</b><span>「請求書を作るときの段取り」のような作業手順のメモ。AIが必要なとき読んで、その通り動く。1枚足す＝新しい仕事ができる。</span></div>
+      </div>
+    </div>
+
+    <div class="bigfolder reveal">
+<span class="top">📁 ワークスペース</span> <span class="cm"># ＝ あなたのAI本体まるごと</span>
+  ├ <span class="g">roles/</span>        <span class="cm"># 性格設定（文章）</span>
+  ├ <span class="g">skills/</span>       <span class="cm"># できることの手順書たち</span>
+  ├ <span class="g">restaurants/</span>  <span class="cm"># レストラン台帳</span>
+  ├ <span class="g">shopping/</span>     <span class="cm"># 買い物リスト</span>
+  └ <span class="g">cooking/</span>      <span class="cm"># レシピ帳</span>
+    </div>
+    <p class="reveal">
+      全部ただのファイルなので、<code>cp -r</code> でコピーすればAIごと引っ越せるし、<code>git</code> で履歴も残る。
+      <span class="hl">このフォルダこそがAIそのもの</span>、というのが一番言いたかったことです。
+    </p>
+  </div>
+</section>
+
+<!-- SUMMARY -->
+<section>
+  <div class="wrap">
+    <div class="stitle reveal"><span class="no">まとめ</span><h2>結局やっているのは、3種類のファイル操作だけ</h2></div>
+    <p class="reveal">難しい4本の論文も、具体には次の3つに集約されます。</p>
+    <div class="ops reveal">
+      <div class="op">
+        <span class="cmd">schema を書く</span>
+        <div class="tx"><b>アプリを作る</b><span>欄を決めた台帳の定義を1枚書く。＝ collections</span></div>
+      </div>
+      <div class="op">
+        <span class="cmd">json を足す / 直す</span>
+        <div class="tx"><b>使う・育てる</b><span>レコードを1件足す、台帳の定義を書き換える。＝ workspace（自己改善）</span></div>
+      </div>
+      <div class="op">
+        <span class="cmd">view.html を書く</span>
+        <div class="tx"><b>自分専用の見た目を生やす</b><span>その都度UIを作り、不満なら捨てて作り直す。＝ software-for-one</span></div>
+      </div>
+    </div>
+    <div class="note reveal">
+      <b>ひとことで。</b> あなたは「何が欲しいか」を言うだけ。AIが台帳とその見た目をその場で作り、使ううちに育ち、フォルダごとAIに溜まっていく。
+      ——コードを書く人も、見る人も、もういません。
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <h3>元になった4本の論考</h3>
+    <p style="font-size:.92rem;color:var(--ink-soft);margin:.3em 0 0">
+      もっと深く知りたくなったら原典へ。難しめですが、ここまで読めばどれも「あの話か」と分かるはずです。
+    </p>
+    <div class="src">
+      <a href="https://github.com/receptron/mulmoclaude/blob/main/docs/papers/collections-architecture.md" target="_blank" rel="noopener"><span>collections-architecture.md</span><span class="jp">台帳1個の作り方 ↗</span></a>
+      <a href="https://github.com/receptron/mulmoclaude/blob/main/docs/papers/workspace-is-the-agent.md" target="_blank" rel="noopener"><span>workspace-is-the-agent.md</span><span class="jp">フォルダ＝AI本体 ↗</span></a>
+      <a href="https://github.com/receptron/mulmoclaude/blob/main/docs/papers/software-for-one.md" target="_blank" rel="noopener"><span>software-for-one.md</span><span class="jp">一人のためのソフト ↗</span></a>
+      <a href="https://github.com/receptron/mulmoclaude/blob/main/docs/papers/dsl-as-harness.md" target="_blank" rel="noopener"><span>dsl-as-harness.md</span><span class="jp">なぜ"欄を決める"形が安全か ↗</span></a>
+    </div>
+    <p class="dis">
+      本ページは receptron/mulmoclaude の docs/papers（著者 Satoshi Nakajima）を、レストランの具体例で日本語にかみ砕いた非公式の解説です。ファイル名・コードは説明用に簡略化しています。正確な定義は原典を参照してください。
+    </p>
+  </div>
+</footer>
+
+<script>
+  const io=new IntersectionObserver((es)=>{
+    es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});
+  },{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>

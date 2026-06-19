@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ドキュメント — 目次</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fbf8f2;
+    --paper-2:#f3eee2;
+    --panel:#ffffff;
+    --ink:#2b2823;
+    --ink-soft:#5c574e;
+    --ink-faint:#978f80;
+    --rule:#e7e0d1;
+    --green:#2f7d5b;
+    --green-deep:#235e44;
+    --green-soft:#e3f0e8;
+    --amber:#cf9526;
+    --amber-soft:#fbeece;
+    --maxw:820px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:"Noto Sans JP",system-ui,sans-serif;line-height:1.95;font-size:17px;
+    font-feature-settings:"palt" 1;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  }
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+  h1,h2,h3{font-family:"Zen Maru Gothic",sans-serif;font-weight:700;line-height:1.45}
+  code,.mono{font-family:"JetBrains Mono",monospace}
+  a{color:inherit;text-decoration:none}
+
+  /* header */
+  header{padding:84px 0 30px;position:relative;overflow:hidden}
+  header::before{
+    content:"";position:absolute;top:-130px;left:-90px;width:380px;height:380px;
+    background:radial-gradient(circle,var(--green-soft),transparent 68%);opacity:.85;
+  }
+  header .wrap{position:relative}
+  header .badge{
+    display:inline-block;background:var(--green-soft);color:var(--green-deep);font-size:.74rem;
+    font-weight:700;border:1px solid #cfe5d9;border-radius:999px;padding:.42em 1em;margin-bottom:20px;
+    font-family:"JetBrains Mono",monospace;letter-spacing:.05em;
+  }
+  /* ↓↓↓ サイト名はここを書き換えてください ↓↓↓ */
+  header h1{font-size:clamp(2.1rem,5.5vw,3.1rem);font-weight:900;margin:0 0 .25em;letter-spacing:.01em}
+  header p.tag{font-size:clamp(1rem,2vw,1.18rem);color:var(--ink-soft);margin:0;max-width:30em}
+
+  /* count strip */
+  .strip{
+    display:flex;align-items:baseline;gap:.6em;margin:46px 0 14px;
+    border-bottom:1px solid var(--rule);padding-bottom:10px;
+  }
+  .strip h2{font-size:1.05rem;margin:0}
+  .strip .count{font-family:"JetBrains Mono",monospace;font-size:.8rem;color:var(--ink-faint)}
+
+  /* article list */
+  .list{display:flex;flex-direction:column;gap:14px;padding-bottom:10px}
+  .card{
+    display:block;background:var(--panel);border:1px solid var(--rule);border-radius:14px;
+    padding:22px 24px;transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;
+  }
+  .card:hover{transform:translateY(-2px);border-color:var(--green);box-shadow:0 6px 20px rgba(47,125,91,.08)}
+  .card .meta{
+    display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-bottom:8px;
+    font-family:"JetBrains Mono",monospace;font-size:.72rem;color:var(--ink-faint);
+  }
+  .card .meta .date{color:var(--ink-faint)}
+  .card .tag{
+    background:var(--paper-2);border:1px solid var(--rule);border-radius:6px;
+    padding:.12em .6em;color:var(--green-deep);
+  }
+  .card h3{font-size:1.28rem;margin:0 0 .3em;color:var(--ink)}
+  .card .desc{margin:0;font-size:.95rem;color:var(--ink-soft);line-height:1.8}
+  .card .go{
+    display:inline-flex;align-items:center;gap:.4em;margin-top:14px;
+    font-weight:700;color:var(--green-deep);font-size:.92rem;
+  }
+  .card .go .arrow{transition:transform .2s ease}
+  .card:hover .go .arrow{transform:translateX(4px)}
+
+  /* placeholder for next article */
+  .soon{
+    border:1px dashed var(--rule);border-radius:14px;padding:20px 24px;
+    color:var(--ink-faint);font-size:.9rem;text-align:center;background:transparent;
+  }
+  .soon code{background:var(--paper-2);border:1px solid var(--rule);border-radius:5px;padding:.08em .45em;font-size:.85em;color:var(--green-deep)}
+
+  footer{margin-top:54px;padding:40px 0 64px;border-top:1px solid var(--rule)}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;align-items:center}
+  footer p{margin:0;font-size:.82rem;color:var(--ink-faint)}
+  footer a.gh{
+    font-family:"JetBrains Mono",monospace;font-size:.8rem;color:var(--ink-soft);
+    border:1px solid var(--rule);border-radius:8px;padding:.5em .9em;background:var(--panel);
+  }
+  footer a.gh:hover{border-color:var(--green)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <span class="badge">DOCS</span>
+    <!-- ▼ サイト名・サブタイトルはここを自由に書き換えてください ▼ -->
+    <h1>ドキュメント</h1>
+    <p class="tag">技術や考えごとを、なるべくやさしく書き残していく場所。</p>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="strip">
+      <h2>記事一覧</h2>
+      <span class="count">all posts</span>
+    </div>
+
+    <div class="list">
+
+      <!-- ===== 記事カード（1枚＝1記事）。増やすときはこのブロックをコピー ===== -->
+      <a class="card" href="./mulmoclaude/">
+        <div class="meta">
+          <span class="date">2026-06-19</span>
+          <span class="tag">AI</span>
+          <span class="tag">ソフトウェア設計</span>
+        </div>
+        <h3>AIに「自分専用の台帳」を作らせるという話</h3>
+        <p class="desc">
+          「ワークスペースがエージェントになる」「アプリがデータになる」——
+          むずかしい論文4本を、1軒のレストランを記録する具体例だけで最初から最後までやさしく解説。
+        </p>
+        <span class="go">読む <span class="arrow">→</span></span>
+      </a>
+      <!-- ===== ここまでが1枚 ===== -->
+
+      <!-- 次の記事を足すときの手順：
+           1) docs/ の中に新しいフォルダを作る（例：azure-purview/）
+           2) その中に index.html を置く
+           3) 上のカード1枚ぶんをコピーして、href・日付・タグ・タイトル・説明を書き換える
+              href は "./フォルダ名/" の形（例：href="./azure-purview/"）
+      -->
+
+      <div class="soon">
+        次の記事はここに並びます。<code>docs/フォルダ名/index.html</code> を足して、上のカードを1枚コピーするだけ。
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>© 2026</p>
+    <!-- ▼ 自分のリポジトリURLに差し替えると、ソースへのリンクになります ▼ -->
+    <a class="gh" href="https://github.com/" target="_blank" rel="noopener">GitHub ↗</a>
+  </div>
+</footer>
+
+</body>
+</html>
